@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".DetailLaporanActivity">
+
+    <ImageView
+        android:id="@+id/image_view_bukti"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        tools:src="@drawable/placeholder_image" />
+
+    <TextView
+        android:id="@+id/text_view_nama_pelapor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        tools:text="Nama Pelapor: John Doe" />
+
+    <TextView
+        android:id="@+id/text_view_nomor_polisi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        tools:text="Nomor Polisi: B 1234 ABC" />
+
+    <TextView
+        android:id="@+id/text_view_merk_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        tools:text="Merk/Type: Honda Vario 150" />
+
+    <TextView
+        android:id="@+id/text_view_lokasi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        tools:text="Lokasi: Jl. Contoh No. 123" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button_edit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="Edit" />
+
+        <Button
+            android:id="@+id/button_hapus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="Hapus" />
+    </LinearLayout>
+
+</LinearLayout>

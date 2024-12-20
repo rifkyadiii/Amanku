@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "475524397150",
+    "project_id": "amanku-aa3bf",
+    "storage_bucket": "amanku-aa3bf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:475524397150:android:5ff4c04f37cf7b126f5ccf",
+        "android_client_info": {
+          "package_name": "pam.uas.amanku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUH1HJjgx4MEgeexrkb9EuVNmnbrEOdNo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
