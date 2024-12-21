@@ -6,13 +6,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".HomeActivity">
+    tools:context=".EditLaporanActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:context=".HomeActivity">
+        tools:context=".EditLaporanActivity">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -45,53 +45,51 @@
                 android:padding="16dp">
 
                 <ImageView
-                    android:id="@+id/buktiImageView"
+                    android:id="@+id/edit_image_view_bukti"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
                     android:layout_marginBottom="16dp"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/placeholder_image" />
+                    tools:src="@drawable/placeholder_image" />
 
                 <Button
-                    android:id="@+id/uploadButton"
+                    android:id="@+id/edit_upload_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    android:text="Upload Bukti" />
+                    android:text="Ganti Bukti" />
 
                 <EditText
-                    android:id="@+id/namaPelaporEditText"
+                    android:id="@+id/edit_nama_pelapor"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     android:hint="Nama Pelapor"
-                    android:inputType="textPersonName"
                     android:minHeight="48dp" />
 
                 <EditText
-                    android:id="@+id/nomorPolisiEditText"
+                    android:id="@+id/edit_nomor_polisi"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     android:hint="Nomor Polisi"
-                    android:inputType="text"
                     android:minHeight="48dp" />
 
                 <EditText
-                    android:id="@+id/merkTypeEditText"
+                    android:id="@+id/edit_merk_type"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     android:hint="Merk/Type"
-                    android:inputType="text"
                     android:minHeight="48dp" />
 
                 <TextView
-                    android:id="@+id/lokasiTextView"
+                    android:id="@+id/edit_lokasi"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     android:text="Lokasi: " />
+
 
                 <EditText
                     android:id="@+id/searchLocationEditText"
@@ -109,10 +107,10 @@
                     android:layout_marginBottom="16dp"/>
 
                 <Button
-                    android:id="@+id/submitButton"
+                    android:id="@+id/button_simpan_perubahan"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Submit" />
+                    android:text="Simpan Perubahan" />
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>

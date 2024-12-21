@@ -10,7 +10,6 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMainBinding
     private lateinit var auth: FirebaseAuth
 
@@ -22,10 +21,10 @@ class MainActivity : AppCompatActivity() {
         // Initialize Firebase Auth
         auth = Firebase.auth
 
-        // Cek apakah user sudah login
+        // Check if the user is already logged in
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            startActivity(Intent(this, HomeActivity::class.java))
+            startActivity(Intent(this, DaftarLaporanActivity::class.java))
             finish()
         }
 
@@ -41,46 +40,21 @@ class MainActivity : AppCompatActivity() {
             auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
-                        // Sign in success, update UI with the signed-in user's information
-                        auth.currentUser
-                        startActivity(Intent(this, HomeActivity::class.java))
+                        startActivity(Intent(this, DaftarLaporanActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        })
                         finish()
                     } else {
-                        // If sign in fails, display a message to the user.
                         Toast.makeText(
-                            baseContext, "Authentication failed.",
+                            baseContext, "Login gagal. Silakan coba lagi.",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                 }
         }
 
-        binding.registerButton.setOnClickListener {
-            val email = binding.emailEditText.text.toString()
-            val password = binding.passwordEditText.text.toString()
-
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Email dan password tidak boleh kosong", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        // Sign in success, update UI with the signed-in user's information
-                        auth.currentUser
-                        Toast.makeText(
-                            baseContext, "Registrasi Berhasil, Silahkan login.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        // If sign in fails, display a message to the user.
-                        Toast.makeText(
-                            baseContext, "Authentication failed.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
+        binding.registerText.setOnClickListener {
+            startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
 }

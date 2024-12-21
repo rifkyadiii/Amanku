@@ -1,11 +1,21 @@
 package pam.uas.amanku
 
-import android.content.DialogInterface
+import android.content.Intent
+import android.graphics.Typeface
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -13,6 +23,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import pam.uas.amanku.databinding.ActivityDetailLaporanBinding
 
 class DetailLaporanActivity : AppCompatActivity() {
@@ -29,7 +43,11 @@ class DetailLaporanActivity : AppCompatActivity() {
 
         database = FirebaseDatabase.getInstance().getReference("laporan")
 
-        laporanId = intent.getStringExtra("nomorPolisi") // Assuming you are passing nomorPolisi as ID
+        binding.backButton.setOnClickListener {
+            finish()
+        }
+
+        laporanId = intent.getStringExtra("nomorPolisi")
         if (laporanId != null) {
             loadLaporanDetail(laporanId!!)
         } else {
@@ -50,11 +68,10 @@ class DetailLaporanActivity : AppCompatActivity() {
         binding.buttonEdit.setOnClickListener {
             currentLaporan?.let {
                 if (isUserLaporanOwner(it)) {
-                    // Implement edit functionality here, e.g., open an edit activity
-                    // val intent = Intent(this, EditLaporanActivity::class.java)
-                    // intent.putExtra("laporanId", laporanId)
-                    // startActivity(intent)
-                    Toast.makeText(this, "Fitur ini belum diimplementasikan", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this, EditLaporanActivity::class.java).apply {
+                        putExtra("LAPORAN_ID", laporanId)
+                    }
+                    startActivity(intent)
                 } else {
                     Toast.makeText(this, "Anda tidak bisa mengedit laporan ini.", Toast.LENGTH_SHORT).show()
                 }
@@ -95,7 +112,92 @@ class DetailLaporanActivity : AppCompatActivity() {
         binding.textViewNamaPelapor.text = "Nama Pelapor: ${laporan.namaPelapor}"
         binding.textViewNomorPolisi.text = "Nomor Polisi: ${laporan.nomorPolisi}"
         binding.textViewMerkType.text = "Merk/Type: ${laporan.merkType}"
-        binding.textViewLokasi.text = "Lokasi: ${laporan.lokasi}"
+
+        // Set lokasi text dengan style
+        val lokasiText = "Lokasi: ${laporan.lokasi}"
+        val hintText = "\n\n📍 Ketuk untuk membuka di Google Maps"
+        val spannable = SpannableString("$lokasiText$hintText")
+
+        // Style untuk hint text
+        val hintColor = ContextCompat.getColor(this, R.color.purple_700) // Atau warna lain yang sesuai tema
+        spannable.setSpan(
+            ForegroundColorSpan(hintColor),
+            lokasiText.length,
+            spannable.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        // Style untuk ukuran text hint
+        spannable.setSpan(
+            RelativeSizeSpan(0.8f),
+            lokasiText.length,
+            spannable.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        // Tambahkan style italic untuk hint
+        spannable.setSpan(
+            StyleSpan(Typeface.ITALIC),
+            lokasiText.length,
+            spannable.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        binding.textViewLokasi.text = spannable
+        binding.textViewLokasi.setTextIsSelectable(true)
+
+        binding.textViewLokasi.setOnClickListener {
+            laporan.latitude?.let { lat ->
+                laporan.longitude?.let { lon ->
+                    val uriString = "https://www.google.com/maps/search/?api=1&query=$lat,$lon"
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString))
+                    startActivity(intent)
+                }
+            } ?: Toast.makeText(this, "Koordinat lokasi tidak tersedia", Toast.LENGTH_SHORT).show()
+        }
+
+        setupMapView(laporan)
+
+        if (!isUserLaporanOwner(laporan)) {
+            binding.buttonEdit.visibility = View.GONE
+            binding.buttonHapus.visibility = View.GONE
+        } else {
+            binding.buttonEdit.visibility = View.VISIBLE
+            binding.buttonHapus.visibility = View.VISIBLE
+        }
+    }
+
+    private fun setupMapView(laporan: Laporan) {
+        val mapView = MapView(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dpToPx(200)
+            )
+            setTileSource(TileSourceFactory.MAPNIK)
+            setMultiTouchControls(true)
+        }
+
+        binding.mapContainer.addView(mapView)
+
+        laporan.latitude?.let { lat ->
+            laporan.longitude?.let { lon ->
+                val location = GeoPoint(lat, lon)
+                mapView.controller.setCenter(location)
+                mapView.controller.setZoom(15.0)
+
+                val marker = Marker(mapView).apply {
+                    position = location
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    title = "Lokasi Laporan"
+                }
+                mapView.overlays.add(marker)
+                mapView.invalidate()
+            }
+        }
+    }
+
+    // Helper function untuk konversi dp ke pixel
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
 
     private fun isUserLaporanOwner(laporan: Laporan): Boolean {

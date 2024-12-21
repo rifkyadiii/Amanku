@@ -6,13 +6,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".DetailLaporanActivity">
+    tools:context=".AboutActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:context=".DetailLaporanActivity">
+        tools:context=".AboutActivity">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -44,72 +44,63 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <ImageView
-                    android:id="@+id/image_view_bukti"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    android:scaleType="centerCrop"
-                    tools:src="@drawable/placeholder_image" />
-
                 <TextView
-                    android:id="@+id/text_view_nama_pelapor"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    tools:text="Nama Pelapor: John Doe" />
-
-                <TextView
-                    android:id="@+id/text_view_nomor_polisi"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    tools:text="Nomor Polisi: B 1234 ABC" />
-
-                <TextView
-                    android:id="@+id/text_view_merk_type"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    tools:text="Merk/Type: Honda Vario 150" />
-
-                <TextView
-                    android:id="@+id/text_view_lokasi"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    tools:text="Lokasi: Jl. Contoh No. 123" />
-
-                <FrameLayout
-                    android:id="@+id/mapContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp" />
+                    android:text="UAS\nPENGEMBANGAN\nAPLIKASI MOBILE"
+                    android:textAlignment="center"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:orientation="horizontal">
+                    android:layout_gravity="center"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="20dp">
 
-                    <Button
-                        android:id="@+id/button_edit"
+                    <ImageView
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
+                        android:layout_height="150dp"
                         android:layout_weight="1"
-                        android:text="Edit" />
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/logo_uin"/>
 
-                    <Button
-                        android:id="@+id/button_hapus"
+                    <ImageView
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_height="150dp"
                         android:layout_weight="1"
-                        android:text="Hapus" />
+                        android:layout_marginStart="16dp"
+                        android:src="@drawable/logo_amanku"/>
+
                 </LinearLayout>
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="ANGGOTA KELOMPOK:"
+                    android:textAlignment="center"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginStart="10dp"
+                    android:text="• GEVIRA ZAHRA SHOFA (1227050050)\n• ICHLASHUL AMAL SANTOSA (1227050054)\n• MOCH RIFKY A. ADIKUSUMAH (1227050072)\n• MUHAMMAD ARKAN RAIHAN (1227050085)"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:text="TEKNIK INFORMATIKA\nFAKULTAS SAINS DAN TEKNOLOGI\nUIN SUNAN GUNUNG DJATI\nBANDUNG\n2024"
+                    android:textAlignment="center"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
-
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

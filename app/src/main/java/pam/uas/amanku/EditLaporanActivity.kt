@@ -28,7 +28,11 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import pam.uas.amanku.databinding.ActivityHomeBinding
 import com.karumi.dexter.Dexter
@@ -56,10 +60,10 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.MapEventsOverlay
 import kotlinx.coroutines.*
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import pam.uas.amanku.databinding.ActivityEditLaporanBinding
 
-class HomeActivity : AppCompatActivity() {
-
-    private lateinit var binding: ActivityHomeBinding
+class EditLaporanActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityEditLaporanBinding
     private var selectedImageUri: Uri? = null
     private var uploadedImageUrl: String? = null
     private lateinit var currentPhotoPath: String
@@ -71,6 +75,8 @@ class HomeActivity : AppCompatActivity() {
     private val PREFS_NAME = "MapPrefs"
     private val ZOOM_LEVEL_KEY = "zoomLevel"
     private lateinit var database: DatabaseReference
+    private var laporanId: String = ""
+    private lateinit var currentLaporanId: String
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 100
@@ -78,75 +84,123 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityHomeBinding.inflate(layoutInflater)
+        binding = ActivityEditLaporanBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Inisialisasi SharedPreferences di awal onCreate()
-        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-        // Initialize Firebase Database
-        database = Firebase.database.reference
+        database = FirebaseDatabase.getInstance().getReference("laporan")
 
         binding.backButton.setOnClickListener {
             finish()
         }
 
-        binding.uploadButton.setOnClickListener {
-            checkPermissionsAndOpenChooser()
+        // Get laporanId from intent
+        laporanId = intent.getStringExtra("LAPORAN_ID") ?: run {
+            Toast.makeText(this, "ID Laporan tidak ditemukan", Toast.LENGTH_SHORT).show()
+            finish()
+            return
         }
-        // Inisialisasi FusedLocationProviderClient
+
+        initializeComponents()
+        loadLaporanData()
+        setupButtons()
+    }
+
+    private fun loadLaporanData() {
+        database.orderByChild("nomorPolisi").equalTo(laporanId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        for (laporanSnapshot in snapshot.children) {
+                            currentLaporanId = laporanSnapshot.key ?: continue
+                            val laporan = laporanSnapshot.getValue(Laporan::class.java) ?: continue
+
+                            // Fill form fields
+                            binding.editNamaPelapor.setText(laporan.namaPelapor)
+                            binding.editNomorPolisi.setText(laporan.nomorPolisi)
+                            binding.editMerkType.setText(laporan.merkType)
+                            binding.editLokasi.text = "Lokasi: ${laporan.lokasi}"
+
+                            // Load image
+                            laporan.buktiImageUrl?.let { url ->
+                                uploadedImageUrl = url
+                                Glide.with(this@EditLaporanActivity)
+                                    .load(url)
+                                    .placeholder(R.drawable.placeholder_image)
+                                    .into(binding.editImageViewBukti)
+                            }
+
+                            // Set map location
+                            if (laporan.latitude != null && laporan.longitude != null) {
+                                selectedLocation = GeoPoint(laporan.latitude, laporan.longitude)
+                                updateMapLocation(selectedLocation!!)
+                            }
+                            break
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@EditLaporanActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
+    private fun initializeComponents() {
+        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        // Inisialisasi MapView
         mapView = binding.mapView
-        setupMap()
-
-        // Inisialisasi EditText untuk pencarian
         searchLocationEditText = binding.searchLocationEditText
-        setupSearch()
 
-        // Setup listener untuk tombol upload
-        binding.uploadButton.setOnClickListener {
+        setupMap()
+        setupSearch()
+    }
+
+    private fun setupButtons() {
+        binding.editUploadButton.setOnClickListener {
             checkPermissionsAndOpenChooser()
         }
 
-        binding.submitButton.setOnClickListener {
-            val namaPelapor = binding.namaPelaporEditText.text.toString()
-            val nomorPolisi = binding.nomorPolisiEditText.text.toString()
-            val merkType = binding.merkTypeEditText.text.toString()
-            var lokasi = binding.lokasiTextView.text.toString()
-
-            if (selectedImageUri == null) {
-                Toast.makeText(this, "Harap upload bukti gambar", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (namaPelapor.isEmpty() || nomorPolisi.isEmpty() || merkType.isEmpty()) {
-                Toast.makeText(this, "Harap isi semua field", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (selectedLocation == null) {
-                Toast.makeText(this, "Harap pilih lokasi", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (lokasi.startsWith("Lokasi: ")) {
-                lokasi = lokasi.removePrefix("Lokasi: ")
-            }
-
-            val laporan = Laporan(
-                buktiImageUrl = uploadedImageUrl,
-                namaPelapor = namaPelapor,
-                nomorPolisi = nomorPolisi,
-                merkType = merkType,
-                lokasi = lokasi,
-                latitude = selectedLocation?.latitude,
-                longitude = selectedLocation?.longitude
-            )
-
-            simpanDataKeFirebase(laporan)
+        binding.buttonSimpanPerubahan.setOnClickListener {
+            validateAndUpdateLaporan()
         }
+    }
+
+    private fun updateMapLocation(location: GeoPoint) {
+        mapView.overlays.removeAll { it is Marker }
+        val marker = Marker(mapView).apply {
+            position = location
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            title = "Lokasi Laporan"
+        }
+        mapView.overlays.add(marker)
+        mapView.controller.animateTo(location)
+        mapView.controller.setZoom(15.0)
+        mapView.invalidate()
+    }
+
+    private fun validateAndUpdateLaporan() {
+        val updatedLaporan = Laporan(
+            buktiImageUrl = uploadedImageUrl,
+            namaPelapor = binding.editNamaPelapor.text.toString(),
+            nomorPolisi = binding.editNomorPolisi.text.toString(),
+            merkType = binding.editMerkType.text.toString(),
+            lokasi = binding.editLokasi.text.toString().removePrefix("Lokasi: "),
+            latitude = selectedLocation?.latitude,
+            longitude = selectedLocation?.longitude,
+            userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        )
+
+        database.child(currentLaporanId).setValue(updatedLaporan)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Laporan berhasil diperbarui", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, DaftarLaporanActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(intent)
+                finish()
+            }
+            .addOnFailureListener { error ->
+                Toast.makeText(this, "Gagal update: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun setupMap() {
@@ -231,7 +285,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun searchLocation(query: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            val geocoder = Geocoder(this@HomeActivity, Locale.getDefault())
+            val geocoder = Geocoder(this@EditLaporanActivity, Locale.getDefault())
             try {
                 val addresses = geocoder.getFromLocationName(query, 1)
                 withContext(Dispatchers.Main) {
@@ -245,13 +299,13 @@ class HomeActivity : AppCompatActivity() {
                         addMarker(location, query, true) // Tambahkan marker lokasi yang dicari
                         updateLocationTextView(location) // Update TextView
                     } else {
-                        Toast.makeText(this@HomeActivity, "Lokasi tidak ditemukan", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EditLaporanActivity, "Lokasi tidak ditemukan", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: IOException) {
                 withContext(Dispatchers.Main) {
                     e.printStackTrace()
-                    Toast.makeText(this@HomeActivity, "Gagal mencari lokasi", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditLaporanActivity, "Gagal mencari lokasi", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -273,7 +327,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun updateLocationTextView(geoPoint: GeoPoint) {
         if (isInternetAvailable(this)) {
-            binding.lokasiTextView.text = "Lokasi: Sedang mencari alamat..."
+            binding.editLokasi.text = "Lokasi: Sedang mencari alamat..."
             CoroutineScope(Dispatchers.IO).launch {
                 var retryCount = 0
                 val maxRetries = 3
@@ -282,7 +336,7 @@ class HomeActivity : AppCompatActivity() {
 
                 while (retryCount < maxRetries && addressResult == null) {
                     try {
-                        val geocoder = Geocoder(this@HomeActivity, Locale.getDefault())
+                        val geocoder = Geocoder(this@EditLaporanActivity, Locale.getDefault())
                         val addresses = geocoder.getFromLocation(geoPoint.latitude, geoPoint.longitude, 1)
 
                         if (addresses != null && addresses.isNotEmpty()) {
@@ -307,15 +361,15 @@ class HomeActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (addressResult != null) {
-                        binding.lokasiTextView.text = "Lokasi: $addressResult"
+                        binding.editLokasi.text = "Lokasi: $addressResult"
                     } else {
-                        binding.lokasiTextView.text = "Lokasi: Gagal mendapatkan alamat setelah beberapa kali percobaan"
+                        binding.editLokasi.text = "Lokasi: Gagal mendapatkan alamat setelah beberapa kali percobaan"
                     }
                 }
             }
         } else {
             Log.e("updateLocationTextView", "Tidak ada koneksi internet")
-            binding.lokasiTextView.text = "Lokasi: Tidak ada koneksi internet"
+            binding.editLokasi.text = "Lokasi: Tidak ada koneksi internet"
         }
     }
 
@@ -356,7 +410,7 @@ class HomeActivity : AppCompatActivity() {
                     if (report.areAllPermissionsGranted()) {
                         openImageChooser()
                     } else {
-                        Toast.makeText(this@HomeActivity, "Izin diperlukan untuk mengakses kamera dan penyimpanan.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EditLaporanActivity, "Izin diperlukan untuk mengakses kamera dan penyimpanan.", Toast.LENGTH_SHORT).show()
                     }
                 }
 
@@ -414,7 +468,7 @@ class HomeActivity : AppCompatActivity() {
             selectedImageUri = result.data?.data
             selectedImageUri?.let { uri ->
                 val imageFile = compressImage(uri)
-                Glide.with(this).load(uri).into(binding.buktiImageView)
+                Glide.with(this).load(uri).into(binding.editImageViewBukti)
                 uploadImageToImgur(imageFile)
             }
         }
@@ -424,7 +478,7 @@ class HomeActivity : AppCompatActivity() {
         if (result.resultCode == Activity.RESULT_OK) {
             val imageFile = File(currentPhotoPath)
             selectedImageUri = Uri.fromFile(imageFile)
-            Glide.with(this).load(selectedImageUri).into(binding.buktiImageView)
+            Glide.with(this).load(selectedImageUri).into(binding.editImageViewBukti)
             uploadImageToImgur(imageFile)
         }
     }
@@ -463,16 +517,16 @@ class HomeActivity : AppCompatActivity() {
                     val responseBody = response.body()?.string()
                     val link = responseBody?.let { getImgurLinkFromResponse(it) }
                     uploadedImageUrl = link
-                    Toast.makeText(this@HomeActivity, "Gambar berhasil diupload: $link", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditLaporanActivity, "Gambar berhasil diupload: $link", Toast.LENGTH_SHORT).show()
                     Log.d("Upload", "Link: $link")
                 } else {
-                    Toast.makeText(this@HomeActivity, "Upload gagal", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditLaporanActivity, "Upload gagal", Toast.LENGTH_SHORT).show()
                     Log.e("Upload", "Error: ${response.errorBody()?.string()}")
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Toast.makeText(this@HomeActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@EditLaporanActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
                 Log.e("Upload", "Error: ${t.message}")
             }
         })
@@ -494,39 +548,33 @@ class HomeActivity : AppCompatActivity() {
         mapView.onPause()
     }
 
-    private fun simpanDataKeFirebase(laporan: Laporan) {
-        val laporanId = database.child("laporan").push().key ?: return // Generate unique ID
+    private fun updateLaporanInFirebase(laporan: Laporan, laporanId: String) {
         val currentUser = FirebaseAuth.getInstance().currentUser
-        val userId = currentUser?.uid ?: return // Get current user ID
+        val userId = currentUser?.uid ?: return
 
-        // Set user ID to the report
-        val updatedLaporan = laporan.copy(userId = userId)
-
-        database.child("laporan").child(laporanId).setValue(updatedLaporan)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Laporan berhasil disimpan", Toast.LENGTH_SHORT).show()
-                // Kosongkan form
-                binding.buktiImageView.setImageResource(R.drawable.placeholder_image) // Reset gambar
-                uploadedImageUrl = null
-                binding.namaPelaporEditText.setText("")
-                binding.nomorPolisiEditText.setText("")
-                binding.merkTypeEditText.setText("")
-                binding.lokasiTextView.text = "Lokasi: "
-
-                // Reset selectedLocation dan hapus marker
-                selectedLocation = null
-                mapView.overlays.removeAll { it is Marker }
-                mapView.invalidate()
-
-                // Tampilkan SnackBar (lebih baik daripada Toast)
-                Snackbar.make(binding.root, "Laporan berhasil disimpan", Snackbar.LENGTH_SHORT).show()
-
-                // Kembali ke halaman sebelumnya
-                finish()
+        // Verifikasi kepemilikan laporan
+        database.child("laporan").child(laporanId).get().addOnSuccessListener { snapshot ->
+            val existingLaporan = snapshot.getValue(Laporan::class.java)
+            if (existingLaporan?.userId != userId) {
+                Toast.makeText(this, "Anda tidak memiliki izin untuk mengedit laporan ini", Toast.LENGTH_SHORT).show()
+                return@addOnSuccessListener
             }
-            .addOnFailureListener {    database = Firebase.database.reference
-                Toast.makeText(this, "Gagal menyimpan laporan: ${it.message}", Toast.LENGTH_SHORT).show()
-                Log.e("HomeActivity", "Gagal menyimpan laporan", it)
-            }
+
+            // Update laporan dengan mempertahankan userId
+            val updatedLaporan = laporan.copy(userId = userId)
+
+            database.child("laporan").child(laporanId).setValue(updatedLaporan)
+                .addOnSuccessListener {
+                    Snackbar.make(binding.root, "Laporan berhasil diperbarui", Snackbar.LENGTH_SHORT).show()
+                    finish()
+                }
+                .addOnFailureListener { error ->
+                    Toast.makeText(this, "Gagal memperbarui laporan: ${error.message}", Toast.LENGTH_SHORT).show()
+                    Log.e("EditLaporanActivity", "Gagal memperbarui laporan", error)
+                }
+        }.addOnFailureListener { error ->
+            Toast.makeText(this, "Gagal memverifikasi kepemilikan laporan: ${error.message}", Toast.LENGTH_SHORT).show()
+            Log.e("EditLaporanActivity", "Gagal memverifikasi kepemilikan", error)
+        }
     }
 }

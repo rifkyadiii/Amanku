@@ -11,7 +11,7 @@ import retrofit2.http.Part
 interface ImgurApiService {
     @Multipart
     @POST("3/image")
-    @Headers("Authorization: Client-ID 648b5a18e8748f1") // Ganti dengan Client ID kamu
+    @Headers("Authorization: Client-ID 648b5a18e8748f1")
     fun uploadImage(
         @Part image: MultipartBody.Part
     ): Call<ResponseBody>

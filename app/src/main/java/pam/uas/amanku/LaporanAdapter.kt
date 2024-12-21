@@ -15,24 +15,33 @@ class LaporanAdapter(private var listLaporan: List<Laporan>, private val onItemC
     }
 
     override fun onBindViewHolder(holder: LaporanViewHolder, position: Int) {
-        val laporan = listLaporan[position]
-        holder.binding.textViewNomorPolisi.text = "Nomor Polisi: ${laporan.nomorPolisi}"
-        holder.binding.textViewMerkType.text = "Merk/Type: ${laporan.merkType}"
-        holder.binding.textViewLokasi.text = "Lokasi: ${laporan.lokasi}"
-
-        // Menambahkan click listener ke item
-        holder.itemView.setOnClickListener {
-            onItemClick(laporan)
+        with(holder.binding) {
+            listLaporan[position].let { laporan ->
+                textViewNomorPolisi.text = "Nomor Polisi: ${laporan.nomorPolisi}"
+                textViewMerkType.text = "Merk/Type: ${laporan.merkType}"
+                textViewLokasi.text = "Lokasi: ${laporan.lokasi}"
+                root.setOnClickListener { onItemClick(laporan) }
+            }
         }
     }
 
-    override fun getItemCount(): Int {
-        return listLaporan.size
-    }
+    override fun getItemCount() = listLaporan.size
 
-    // Metode untuk memperbarui listLaporan di adapter
     fun updateList(newList: List<Laporan>) {
         listLaporan = newList
         notifyDataSetChanged()
+    }
+
+    fun filterList(query: String) {
+        val filteredList = if (query.isEmpty()) {
+            listLaporan
+        } else {
+            listLaporan.filter { laporan ->
+                laporan.nomorPolisi?.contains(query, true) == true ||
+                        laporan.merkType?.contains(query, true) == true ||
+                        laporan.lokasi?.contains(query, true) == true
+            }
+        }
+        updateList(filteredList)
     }
 }

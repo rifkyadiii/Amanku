@@ -25,7 +25,13 @@
         android:theme="@style/Theme.Amanku"
         tools:targetApi="31">
         <activity
-            android:name=".ItemLaporanActivity"
+            android:name=".RegisterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AboutActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EditLaporanActivity"
             android:exported="false" />
         <activity
             android:name=".DetailLaporanActivity"
