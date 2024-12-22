@@ -1,6 +1,3 @@
-<div class="badge-base LI-profile-badge" data-locale="en_US" data-size="medium" data-theme="light" data-type="VERTICAL" data-vanity="rifky-adi-6712a8245" data-version="v1"><a class="badge-base__link LI-simple-link" href="https://id.linkedin.com/in/rifky-adi-6712a8245?trk=profile-badge">Rifky Adi</a></div>
-              
-
 <h1>AmanKu - Aplikasi Pelaporan Kendaraan Hilang</h1>
 
 <p>AmanKu adalah aplikasi Android yang membantu pengguna melaporkan kehilangan kendaraan bermotor.</p>
