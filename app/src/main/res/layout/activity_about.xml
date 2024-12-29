@@ -100,6 +100,16 @@
                     android:textAlignment="center"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/text_hapus_akun"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:textAlignment="center"
+                    android:text="Hapus Akun:\nhttps://rifkyadiii.github.io/amanku-hapus-akun/"
+                    android:autoLink="web"
+                    android:textColorLink="#0000EE" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </LinearLayout>

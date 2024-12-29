@@ -13,14 +13,17 @@ import android.location.Location
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -31,11 +34,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.database
 import pam.uas.amanku.databinding.ActivityHomeBinding
-import com.karumi.dexter.Dexter
-import com.karumi.dexter.MultiplePermissionsReport
-import com.karumi.dexter.PermissionToken
-import com.karumi.dexter.listener.PermissionRequest
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -62,18 +60,19 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
     private var selectedImageUri: Uri? = null
     private var uploadedImageUrl: String? = null
-    private lateinit var currentPhotoPath: String
     private lateinit var mapView: MapView
     private var selectedLocation: GeoPoint? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var searchLocationEditText: EditText
     private lateinit var sharedPreferences: SharedPreferences
-    private val PREFS_NAME = "MapPrefs"
-    private val ZOOM_LEVEL_KEY = "zoomLevel"
     private lateinit var database: DatabaseReference
+    private var permissionsGranted = false
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 100
+        private const val PERMISSION_REQUEST_CODE = 123
+        private const val PREFS_NAME = "MapPrefs"
+        private const val ZOOM_LEVEL_KEY = "zoomLevel"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,71 +80,139 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Inisialisasi SharedPreferences di awal onCreate()
+        // Inisialisasi komponen
         sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-        // Initialize Firebase Database
         database = Firebase.database.reference
-
-        binding.backButton.setOnClickListener {
-            finish()
-        }
-
-        binding.uploadButton.setOnClickListener {
-            checkPermissionsAndOpenChooser()
-        }
-        // Inisialisasi FusedLocationProviderClient
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        // Inisialisasi MapView
         mapView = binding.mapView
-        setupMap()
-
-        // Inisialisasi EditText untuk pencarian
         searchLocationEditText = binding.searchLocationEditText
-        setupSearch()
 
-        // Setup listener untuk tombol upload
-        binding.uploadButton.setOnClickListener {
-            checkPermissionsAndOpenChooser()
+        // Setup UI
+        setupMap()
+        setupSearch()
+        setupListeners()
+    }
+
+    private fun setupListeners() {
+        binding.backButton.setOnClickListener { finish() }
+        binding.uploadButton.setOnClickListener { checkPermissionsAndOpenChooser() }
+        binding.submitButton.setOnClickListener { handleSubmit() }
+    }
+
+    private fun handleSubmit() {
+        if (!isInternetAvailable(this)) {
+            showErrorMessage("Tidak ada koneksi internet")
+            return
         }
 
-        binding.submitButton.setOnClickListener {
-            val namaPelapor = binding.namaPelaporEditText.text.toString()
-            val nomorPolisi = binding.nomorPolisiEditText.text.toString()
-            val merkType = binding.merkTypeEditText.text.toString()
-            var lokasi = binding.lokasiTextView.text.toString()
+        if (!validateInput()) return
 
-            if (selectedImageUri == null) {
-                Toast.makeText(this, "Harap upload bukti gambar", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+        binding.submitButton.isEnabled = false
+        val laporan = createLaporanObject()
+        simpanDataKeFirebase(laporan)
+    }
 
-            if (namaPelapor.isEmpty() || nomorPolisi.isEmpty() || merkType.isEmpty()) {
-                Toast.makeText(this, "Harap isi semua field", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+    private fun checkAndRequestPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionsGranted = true
+            return
+        }
 
-            if (selectedLocation == null) {
-                Toast.makeText(this, "Harap pilih lokasi", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ),
+            PERMISSION_REQUEST_CODE
+        )
+    }
 
-            if (lokasi.startsWith("Lokasi: ")) {
-                lokasi = lokasi.removePrefix("Lokasi: ")
-            }
+    private fun validateInput(): Boolean {
+        var isValid = true
 
-            val laporan = Laporan(
-                buktiImageUrl = uploadedImageUrl,
-                namaPelapor = namaPelapor,
-                nomorPolisi = nomorPolisi,
-                merkType = merkType,
-                lokasi = lokasi,
-                latitude = selectedLocation?.latitude,
-                longitude = selectedLocation?.longitude
-            )
+        if (binding.namaPelaporEditText.text.isNullOrBlank()) {
+            binding.namaPelaporEditText.error = "Nama pelapor harus diisi"
+            isValid = false
+        }
 
-            simpanDataKeFirebase(laporan)
+        if (binding.nomorPolisiEditText.text.isNullOrBlank()) {
+            binding.nomorPolisiEditText.error = "Nomor polisi harus diisi"
+            isValid = false
+        }
+
+        if (binding.merkTypeEditText.text.isNullOrBlank()) {
+            binding.merkTypeEditText.error = "Merk/Type harus diisi"
+            isValid = false
+        }
+
+        if (selectedImageUri == null) {
+            showErrorMessage("Harap upload bukti gambar")
+            isValid = false
+        }
+
+        if (selectedLocation == null) {
+            showErrorMessage("Harap pilih lokasi pada peta")
+            isValid = false
+        }
+
+        return isValid
+    }
+
+    private fun createLaporanObject(): Laporan {
+        val namaPelapor = binding.namaPelaporEditText.text.toString().trim()
+        val nomorPolisi = binding.nomorPolisiEditText.text.toString().trim()
+        val merkType = binding.merkTypeEditText.text.toString().trim()
+        var lokasi = binding.lokasiTextView.text.toString()
+
+        // Hilangkan prefix "Lokasi: " jika ada
+        if (lokasi.startsWith("Lokasi: ")) {
+            lokasi = lokasi.removePrefix("Lokasi: ")
+        }
+
+        return Laporan(
+            buktiImageUrl = uploadedImageUrl,
+            namaPelapor = namaPelapor,
+            nomorPolisi = nomorPolisi,
+            merkType = merkType,
+            lokasi = lokasi,
+            latitude = selectedLocation?.latitude,
+            longitude = selectedLocation?.longitude,
+            userId = FirebaseAuth.getInstance().currentUser?.uid // tambahkan userId
+        )
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Bersihkan resources
+        mapView.onDetach()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Simpan state
+        outState.putParcelable("selectedImageUri", selectedImageUri)
+        outState.putString("uploadedImageUrl", uploadedImageUrl)
+        selectedLocation?.let {
+            outState.putDouble("selectedLat", it.latitude)
+            outState.putDouble("selectedLon", it.longitude)
+        }
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        // Restore state
+        selectedImageUri = savedInstanceState.getParcelable("selectedImageUri")
+        uploadedImageUrl = savedInstanceState.getString("uploadedImageUrl")
+        val lat = savedInstanceState.getDouble("selectedLat", 0.0)
+        val lon = savedInstanceState.getDouble("selectedLon", 0.0)
+        if (lat != 0.0 && lon != 0.0) {
+            selectedLocation = GeoPoint(lat, lon)
+            addMarker(selectedLocation!!, "Lokasi Terpilih")
         }
     }
 
@@ -338,107 +405,94 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                setupMap()
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openImageChooser()
             } else {
-                Toast.makeText(this, "Izin lokasi ditolak", Toast.LENGTH_SHORT).show()
+                showPermissionDeniedDialog()
             }
         }
     }
 
     // Bagian untuk menangani pemilihan dan upload gambar
     private fun checkPermissionsAndOpenChooser() {
-        Dexter.withContext(this)
-            .withPermissions(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            .withListener(object : MultiplePermissionsListener {
-                override fun onPermissionsChecked(report: MultiplePermissionsReport) {
-                    if (report.areAllPermissionsGranted()) {
-                        openImageChooser()
-                    } else {
-                        Toast.makeText(this@HomeActivity, "Izin diperlukan untuk mengakses kamera dan penyimpanan.", Toast.LENGTH_SHORT).show()
-                    }
-                }
+        if (!isInternetAvailable(this)) {
+            showErrorMessage("Tidak ada koneksi internet")
+            return
+        }
 
-                override fun onPermissionRationaleShouldBeShown(permissions: List<PermissionRequest>, token: PermissionToken) {
-                    token.continuePermissionRequest()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13 ke atas: READ_MEDIA_IMAGES
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED) {
+                openImageChooser()
+            } else {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_MEDIA_IMAGES), PERMISSION_REQUEST_CODE)
+            }
+        } else {
+            // Android 12 ke bawah: READ_EXTERNAL_STORAGE
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                openImageChooser()
+            } else {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), PERMISSION_REQUEST_CODE)
+            }
+        }
+    }
+
+    // Tambahkan dialog untuk permission yang ditolak
+    private fun showPermissionDeniedDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Izin Diperlukan")
+            .setMessage("Aplikasi memerlukan izin penyimpanan untuk mengakses galeri. Silakan berikan izin di pengaturan aplikasi.")
+            .setPositiveButton("Buka Pengaturan") { _, _ ->
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", packageName, null)
                 }
-            })
-            .check()
+                startActivity(intent)
+            }
+            .setNegativeButton("Batal") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    // Fungsi untuk membuka pengaturan aplikasi
+    private fun openAppSettings() {
+        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent.data = Uri.fromParts("package", packageName, null)
+        startActivity(intent)
     }
 
     private fun openImageChooser() {
-        val options = arrayOf<CharSequence>("Ambil Foto", "Pilih dari Galeri", "Batal")
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
-        builder.setTitle("Pilih Sumber Gambar")
-        builder.setItems(options) { dialog, item ->
-            when {
-                options[item] == "Ambil Foto" -> dispatchTakePictureIntent()
-                options[item] == "Pilih dari Galeri" -> {
-                    val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-                    pickImageFromGallery.launch(intent) // Panggil launch() untuk menjalankan intent
-                }
-                options[item] == "Batal" -> dialog.dismiss()
-            }
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "image/*"
         }
-        builder.show()
-    }
-
-    private fun dispatchTakePictureIntent() {
-        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        if (takePictureIntent.resolveActivity(packageManager) != null) {
-            val photoFile: File? = try {
-                createImageFile()
-            } catch (ex: IOException) {
-                null
-            }
-            photoFile?.also {
-                val photoURI: Uri = FileProvider.getUriForFile(this, "pam.uas.amanku.fileprovider", it)
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-                takePicture.launch(takePictureIntent)
-            }
-        }
-    }
-
-    @Throws(IOException::class)
-    private fun createImageFile(): File {
-        val timeStamp: String = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(java.util.Date())
-        val storageDir: File? = getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
-        return File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir).apply {
-            currentPhotoPath = absolutePath
-        }
+        pickImageFromGallery.launch(intent)
     }
 
     private val pickImageFromGallery = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             selectedImageUri = result.data?.data
             selectedImageUri?.let { uri ->
-                val imageFile = compressImage(uri)
-                Glide.with(this).load(uri).into(binding.buktiImageView)
-                uploadImageToImgur(imageFile)
+                try {
+                    val imageFile = compressImage(uri)
+                    Glide.with(this).load(uri).into(binding.buktiImageView)
+                    uploadImageToImgur(imageFile)
+                } catch (e: Exception) {
+                    showErrorMessage("Gagal memproses gambar: ${e.message}")
+                }
             }
         }
     }
 
-    private val takePicture = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val imageFile = File(currentPhotoPath)
-            selectedImageUri = Uri.fromFile(imageFile)
-            Glide.with(this).load(selectedImageUri).into(binding.buktiImageView)
-            uploadImageToImgur(imageFile)
-        }
-    }
-
     private fun compressImage(imageUri: Uri): File {
-        val filePath = getRealPathFromURI(imageUri)
-        val bitmap = BitmapFactory.decodeFile(filePath)
-        val compressedImageFile = File.createTempFile("compressed_", ".jpg")
-        val outputStream = FileOutputStream(compressedImageFile)
+        val inputStream = contentResolver.openInputStream(imageUri)
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        val compressedImageFile = File.createTempFile("compressed_", ".jpg", cacheDir)
 
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
-
-        outputStream.flush()
-        outputStream.close()
+        FileOutputStream(compressedImageFile).use { outputStream ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+        }
 
         return compressedImageFile
     }
@@ -454,28 +508,69 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun uploadImageToImgur(imageFile: File) {
-        val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
-        val body = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
+        // Tambahkan state loading
+        binding.uploadButton.isEnabled = false
+        binding.submitButton.isEnabled = false
 
-        RetrofitClient.instance.uploadImage(body).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if (response.isSuccessful) {
-                    val responseBody = response.body()?.string()
-                    val link = responseBody?.let { getImgurLinkFromResponse(it) }
-                    uploadedImageUrl = link
-                    Toast.makeText(this@HomeActivity, "Gambar berhasil diupload: $link", Toast.LENGTH_SHORT).show()
-                    Log.d("Upload", "Link: $link")
-                } else {
-                    Toast.makeText(this@HomeActivity, "Upload gagal", Toast.LENGTH_SHORT).show()
-                    Log.e("Upload", "Error: ${response.errorBody()?.string()}")
+        try {
+            // Tambahkan timeout untuk upload
+            val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+            val body = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
+
+            RetrofitClient.instance.uploadImage(body).enqueue(object : Callback<ResponseBody> {
+                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                    binding.uploadButton.isEnabled = true
+                    binding.submitButton.isEnabled = true
+
+                    if (response.isSuccessful) {
+                        try {
+                            val responseBody = response.body()?.string()
+                            val link = responseBody?.let { getImgurLinkFromResponse(it) }
+                            if (link != null) {
+                                uploadedImageUrl = link
+                                showSuccessMessage("Gambar berhasil diupload")
+                            } else {
+                                showErrorMessage("Format response tidak valid")
+                            }
+                        } catch (e: Exception) {
+                            showErrorMessage("Gagal memproses response: ${e.message}")
+                        }
+                    } else {
+                        showErrorMessage("Upload gagal: ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    binding.uploadButton.isEnabled = true
+                    binding.submitButton.isEnabled = true
+                    showErrorMessage("Koneksi gagal: ${t.message}")
+                }
+            })
+        } catch (e: Exception) {
+            binding.uploadButton.isEnabled = true
+            binding.submitButton.isEnabled = true
+            showErrorMessage("Error: ${e.message}")
+        }
+    }
+
+    private fun showSuccessMessage(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
+            .setBackgroundTint(getColor(R.color.success_color))
+            .show()
+    }
+
+    private fun showErrorMessage(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+            .setBackgroundTint(getColor(R.color.error_color))
+            .setAction("Coba Lagi") {
+                if (selectedImageUri != null) {
+                    selectedImageUri?.let { uri ->
+                        val imageFile = compressImage(uri)
+                        uploadImageToImgur(imageFile)
+                    }
                 }
             }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Toast.makeText(this@HomeActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
-                Log.e("Upload", "Error: ${t.message}")
-            }
-        })
+            .show()
     }
 
     private fun getImgurLinkFromResponse(response: String): String? {

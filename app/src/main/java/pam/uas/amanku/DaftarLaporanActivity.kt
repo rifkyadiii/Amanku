@@ -17,11 +17,14 @@ import com.google.firebase.database.ValueEventListener
 import pam.uas.amanku.databinding.ActivityDaftarLaporanBinding
 
 class DaftarLaporanActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityDaftarLaporanBinding
     private lateinit var database: DatabaseReference
     private val listLaporan = mutableListOf<Laporan>()
     private lateinit var adapter: LaporanAdapter
-    private lateinit var originalList: List<Laporan>
+
+    // Gunakan lateinit var hanya jika Anda yakin akan menginisialisasinya sebelum digunakan.
+    private lateinit var originalList: List<Laporan> // Perhatikan bahwa variabel ini sekarang lateinit
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +35,14 @@ class DaftarLaporanActivity : AppCompatActivity() {
 
         setupRecyclerView()
         setupTabs()
-        loadAllReports()
+
+        // Pindahkan loadAllReports() dan loadMyReports() ke sini untuk memastikan originalList diinisialisasi sebelum setupSearch()
+        if (binding.tabLayout.selectedTabPosition == 0) {
+            loadAllReports()
+        } else {
+            loadMyReports()
+        }
+
         setupSearch()
         setupButtons()
 
@@ -42,6 +52,7 @@ class DaftarLaporanActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
+        // Inisialisasi adapter di sini atau di onCreate, sebelum data dimuat.
         adapter = LaporanAdapter(listLaporan) { laporan ->
             startActivity(Intent(this, DetailLaporanActivity::class.java).apply {
                 putExtra("nomorPolisi", laporan.nomorPolisi)
@@ -56,26 +67,31 @@ class DaftarLaporanActivity : AppCompatActivity() {
     private fun setupTabs() {
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                when(tab?.position) {
+                when (tab?.position) {
                     0 -> loadAllReports()
                     1 -> loadMyReports()
                 }
             }
+
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
             override fun onTabReselected(tab: TabLayout.Tab?) {}
         })
     }
 
     private fun loadAllReports() {
-        database.addValueEventListener(object : ValueEventListener {
+        // Menggunakan addListenerForSingleValueEvent untuk inisialisasi originalList
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                listLaporan.clear()
+                val tempList = mutableListOf<Laporan>()
                 snapshot.children.forEach {
                     it.getValue(Laporan::class.java)?.let { laporan ->
-                        listLaporan.add(laporan)
+                        tempList.add(laporan)
                     }
                 }
-                originalList = listLaporan.toList()
+                // Inisialisasi originalList dengan data yang didapat dari database
+                originalList = tempList
+                listLaporan.clear()
+                listLaporan.addAll(originalList)
                 adapter.notifyDataSetChanged()
                 updateEmptyStateVisibility()
             }
@@ -88,16 +104,20 @@ class DaftarLaporanActivity : AppCompatActivity() {
 
     private fun loadMyReports() {
         val currentUser = FirebaseAuth.getInstance().currentUser?.uid
+        // Menggunakan addListenerForSingleValueEvent untuk inisialisasi originalList
         database.orderByChild("userId").equalTo(currentUser)
-            .addValueEventListener(object : ValueEventListener {
+            .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    listLaporan.clear()
+                    val tempList = mutableListOf<Laporan>()
                     snapshot.children.forEach {
                         it.getValue(Laporan::class.java)?.let { laporan ->
-                            listLaporan.add(laporan)
+                            tempList.add(laporan)
                         }
                     }
-                    originalList = listLaporan.toList()
+                    // Inisialisasi originalList dengan data yang didapat dari database
+                    originalList = tempList
+                    listLaporan.clear()
+                    listLaporan.addAll(originalList)
                     adapter.notifyDataSetChanged()
                     updateEmptyStateVisibility()
                 }
@@ -111,6 +131,7 @@ class DaftarLaporanActivity : AppCompatActivity() {
     private fun setupSearch() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
+
             override fun onQueryTextChange(newText: String?): Boolean {
                 filterData(newText)
                 return true
@@ -119,17 +140,27 @@ class DaftarLaporanActivity : AppCompatActivity() {
     }
 
     private fun filterData(query: String?) {
-        val filteredList = if (query.isNullOrBlank()) {
-            originalList
-        } else {
-            originalList.filter { laporan ->
-                laporan.nomorPolisi?.contains(query, ignoreCase = true) == true ||
-                        laporan.merkType?.contains(query, ignoreCase = true) == true ||
-                        laporan.lokasi?.contains(query, ignoreCase = true) == true
+        // Pastikan originalList sudah diinisialisasi sebelum digunakan
+        if (::originalList.isInitialized) {
+            val filteredList = if (query.isNullOrBlank()) {
+                originalList
+            } else {
+                originalList.filter { laporan ->
+                    laporan.nomorPolisi?.contains(query, ignoreCase = true) == true ||
+                            laporan.merkType?.contains(query, ignoreCase = true) == true ||
+                            laporan.lokasi?.contains(query, ignoreCase = true) == true
+                }
             }
+            // Update listLaporan dengan data yang difilter
+            listLaporan.clear()
+            listLaporan.addAll(filteredList)
+
+            // Gunakan adapter yang sudah diinisialisasi sebelumnya
+            adapter.notifyDataSetChanged()
+            updateEmptyStateVisibility(filteredList)
+        } else {
+            Log.e("DaftarLaporanActivity", "originalList not initialized")
         }
-        adapter.updateList(filteredList)
-        updateEmptyStateVisibility(filteredList)
     }
 
     private fun setupButtons() {

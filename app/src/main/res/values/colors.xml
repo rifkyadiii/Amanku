@@ -9,4 +9,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="red">#ED5148</color>
+    <color name="success_color">#1FD541</color>
+    <color name="error_color">#E7372A</color>
 </resources>
