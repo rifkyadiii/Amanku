@@ -17,7 +17,6 @@
 
 <div style="display: flex; flex-wrap: wrap;">
   <img src="https://github.com/user-attachments/assets/d5e4311f-db4b-4533-ac53-a5682d448a58" width="250" height="500" alt="Tampilan 1" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/88f6eee1-fcde-422f-b7b1-973c19381d96" width="250" height="500" alt="Tampilan 2" style="margin: 5px;">
   <img src="https://github.com/user-attachments/assets/5f3c70bb-3580-4b17-b3ac-14b3f50a60c9" width="250" height="500" alt="Tampilan 4" style="margin: 5px;">
   <img src="https://github.com/user-attachments/assets/01df28c4-8e39-426d-b9d5-289ac4faf491" width="250" height="500" alt="Tampilan 6" style="margin: 5px;">
   <img src="https://github.com/user-attachments/assets/6c78604c-26b0-4484-b226-3e623cf0f2dd" width="250" height="500" alt="Tampilan 8" style="margin: 5px;">
