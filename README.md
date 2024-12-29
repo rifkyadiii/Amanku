@@ -13,6 +13,21 @@
   <li>Unggah Gambar: Lampirkan gambar kendaraan yang hilang untuk membantu identifikasi.</li>
 </ul>
 
+<h2>Tampilan Aplikasi/h2>
+
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/f23fc566-3350-4d97-895f-49466adcd1fb" width="200"></td>
+    <td><img src="https://github.com/user-attachments/assets/11f3ffcc-cfe4-4fc7-b251-8e5a7005d877" width="200"></td>
+    <td><img src="https://github.com/user-attachments/assets/bd6470cb-d9c1-4e64-855b-2044d972f6e8" width="200"></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/14e906f2-b4ac-47cb-afc1-c8819822d235" width="200"></td>
+    <td><img src="https://github.com/user-attachments/assets/f45b52d4-6aea-4276-ad17-d5f1815751b1" width="200"></td>
+    <td><img src="https://github.com/user-attachments/assets/f5e864ce-c139-412f-be6e-4d2c03c38379" width="200"></td>
+  </tr>
+</table>
+
 <h2>Teknologi yang Digunakan</h2>
 
 <ul>
