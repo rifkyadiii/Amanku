@@ -2,7 +2,8 @@
 
 <p>AmanKu adalah aplikasi Android yang membantu pengguna melaporkan kehilangan kendaraan bermotor.</p>
 
-<p>Link Vidio Pitchdeck: <a href="https://youtu.be/XWzddbM960o">https://youtu.be/XWzddbM960o</a></p> 
+<p>Link Vidio Pitchdeck: <a href="https://youtu.be/XWzddbM960o">https://youtu.be/XWzddbM960o</a></p>
+<p>Link Play Store: <a href="https://play.google.com/store/apps/details?id=pam.uas.amanku">https://play.google.com/store/apps/details?id=pam.uas.amanku</a></p> 
 
 <h2>Fitur Utama</h2>
 
