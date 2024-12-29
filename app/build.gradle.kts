@@ -10,18 +10,18 @@ android {
 
     defaultConfig {
         applicationId = "pam.uas.amanku"
-        minSdk = 30
+        minSdk = 23
         targetSdk = 34
-        versionCode = 2  // Naikkan version code
-        versionName = "1.0.1" // Naikkan version name
+        versionCode = 5
+        versionName = "1.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        multiDexEnabled = true
+        // multiDexEnabled = true // Dihapus, asumsikan jumlah method < 65,536
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true // Enable minify
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
