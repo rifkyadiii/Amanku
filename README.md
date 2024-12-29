@@ -2,7 +2,8 @@
 
 <p>AmanKu adalah aplikasi Android yang membantu pengguna melaporkan kehilangan kendaraan bermotor.</p>
 
-<p>Link Vidio Pitchdeck: <a href="https://youtu.be/XWzddbM960o">https://youtu.be/XWzddbM960o</a></p> 
+<p>Link Vidio Pitchdeck: <a href="https://youtu.be/XWzddbM960o">https://youtu.be/XWzddbM960o</a></p>
+<p>Link Play Store: <a href="https://play.google.com/store/apps/details?id=pam.uas.amanku">https://play.google.com/store/apps/details?id=pam.uas.amanku</a></p> 
 
 <h2>Fitur Utama</h2>
 
@@ -13,22 +14,20 @@
   <li>Unggah Gambar: Lampirkan gambar kendaraan yang hilang untuk membantu identifikasi.</li>
 </ul>
 
-<h2>Screenshot</h2>
+<h2>Tampilan Aplikasi</h2>
 
-<div style="display: flex; flex-wrap: wrap;">
-  <img src="https://github.com/user-attachments/assets/d5e4311f-db4b-4533-ac53-a5682d448a58" width="250" height="500" alt="Tampilan 1" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/88f6eee1-fcde-422f-b7b1-973c19381d96" width="250" height="500" alt="Tampilan 2" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/6bc62596-bec6-4452-9432-41dd28654cb2" width="250" height="500" alt="Tampilan 3" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/5f3c70bb-3580-4b17-b3ac-14b3f50a60c9" width="250" height="500" alt="Tampilan 4" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/87fc90fc-4bdf-4b0b-941c-e14eb5743889" width="250" height="500" alt="Tampilan 5" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/01df28c4-8e39-426d-b9d5-289ac4faf491" width="250" height="500" alt="Tampilan 6" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/9391b5f1-bb86-4d39-bc58-f28a26a86ba0" width="250" height="500" alt="Tampilan 7" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/6c78604c-26b0-4484-b226-3e623cf0f2dd" width="250" height="500" alt="Tampilan 8" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/3d13a9e7-8aa5-4d9c-a35c-385cb9b5425f" width="250" height="500" alt="Tampilan 9" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/90fd4706-5f51-468d-a074-39a39e010883" width="250" height="500" alt="Tampilan 10" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/ece21c6e-8d5f-45a0-9bca-8e70e4d6f923" width="250" height="500" alt="Tampilan 11" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/358e127b-fd2a-4aec-88cd-bfe79c5ade3d" width="250" height="500" alt="Tampilan 12" style="margin: 5px;">
-</div>
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/f23fc566-3350-4d97-895f-49466adcd1fb" width="200"></td>
+    <td><img src="https://github.com/user-attachments/assets/11f3ffcc-cfe4-4fc7-b251-8e5a7005d877" width="200"></td>
+    <td><img src="https://github.com/user-attachments/assets/bd6470cb-d9c1-4e64-855b-2044d972f6e8" width="200"></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/14e906f2-b4ac-47cb-afc1-c8819822d235" width="200"></td>
+    <td><img src="https://github.com/user-attachments/assets/f45b52d4-6aea-4276-ad17-d5f1815751b1" width="200"></td>
+    <td><img src="https://github.com/user-attachments/assets/f5e864ce-c139-412f-be6e-4d2c03c38379" width="200"></td>
+  </tr>
+</table>
 
 <h2>Teknologi yang Digunakan</h2>
 
