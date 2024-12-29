@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -22,9 +23,7 @@ class DaftarLaporanActivity : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private val listLaporan = mutableListOf<Laporan>()
     private lateinit var adapter: LaporanAdapter
-
-    // Gunakan lateinit var hanya jika Anda yakin akan menginisialisasinya sebelum digunakan.
-    private lateinit var originalList: List<Laporan> // Perhatikan bahwa variabel ini sekarang lateinit
+    private lateinit var originalList: List<Laporan>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +35,6 @@ class DaftarLaporanActivity : AppCompatActivity() {
         setupRecyclerView()
         setupTabs()
 
-        // Pindahkan loadAllReports() dan loadMyReports() ke sini untuk memastikan originalList diinisialisasi sebelum setupSearch()
         if (binding.tabLayout.selectedTabPosition == 0) {
             loadAllReports()
         } else {
@@ -52,7 +50,6 @@ class DaftarLaporanActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        // Inisialisasi adapter di sini atau di onCreate, sebelum data dimuat.
         adapter = LaporanAdapter(listLaporan) { laporan ->
             startActivity(Intent(this, DetailLaporanActivity::class.java).apply {
                 putExtra("nomorPolisi", laporan.nomorPolisi)
@@ -78,9 +75,14 @@ class DaftarLaporanActivity : AppCompatActivity() {
         })
     }
 
-    private fun loadAllReports() {
-        // Menggunakan addListenerForSingleValueEvent untuk inisialisasi originalList
-        database.addListenerForSingleValueEvent(object : ValueEventListener {
+    private fun loadReports(userId: String? = null) {
+        val query = if (userId != null) {
+            database.orderByChild("userId").equalTo(userId)
+        } else {
+            database
+        }
+
+        query.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val tempList = mutableListOf<Laporan>()
                 snapshot.children.forEach {
@@ -88,7 +90,6 @@ class DaftarLaporanActivity : AppCompatActivity() {
                         tempList.add(laporan)
                     }
                 }
-                // Inisialisasi originalList dengan data yang didapat dari database
                 originalList = tempList
                 listLaporan.clear()
                 listLaporan.addAll(originalList)
@@ -98,34 +99,18 @@ class DaftarLaporanActivity : AppCompatActivity() {
 
             override fun onCancelled(error: DatabaseError) {
                 Log.e("DaftarLaporanActivity", "Error: ${error.message}")
+                showErrorSnackbar("Gagal memuat data.")
             }
         })
     }
 
+    private fun loadAllReports() {
+        loadReports()
+    }
+
     private fun loadMyReports() {
         val currentUser = FirebaseAuth.getInstance().currentUser?.uid
-        // Menggunakan addListenerForSingleValueEvent untuk inisialisasi originalList
-        database.orderByChild("userId").equalTo(currentUser)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val tempList = mutableListOf<Laporan>()
-                    snapshot.children.forEach {
-                        it.getValue(Laporan::class.java)?.let { laporan ->
-                            tempList.add(laporan)
-                        }
-                    }
-                    // Inisialisasi originalList dengan data yang didapat dari database
-                    originalList = tempList
-                    listLaporan.clear()
-                    listLaporan.addAll(originalList)
-                    adapter.notifyDataSetChanged()
-                    updateEmptyStateVisibility()
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("DaftarLaporanActivity", "Error: ${error.message}")
-                }
-            })
+        loadReports(currentUser)
     }
 
     private fun setupSearch() {
@@ -140,7 +125,6 @@ class DaftarLaporanActivity : AppCompatActivity() {
     }
 
     private fun filterData(query: String?) {
-        // Pastikan originalList sudah diinisialisasi sebelum digunakan
         if (::originalList.isInitialized) {
             val filteredList = if (query.isNullOrBlank()) {
                 originalList
@@ -151,11 +135,8 @@ class DaftarLaporanActivity : AppCompatActivity() {
                             laporan.lokasi?.contains(query, ignoreCase = true) == true
                 }
             }
-            // Update listLaporan dengan data yang difilter
             listLaporan.clear()
             listLaporan.addAll(filteredList)
-
-            // Gunakan adapter yang sudah diinisialisasi sebelumnya
             adapter.notifyDataSetChanged()
             updateEmptyStateVisibility(filteredList)
         } else {
@@ -196,5 +177,9 @@ class DaftarLaporanActivity : AppCompatActivity() {
             binding.emptyState.visibility = View.GONE
             binding.recyclerViewLaporan.visibility = View.VISIBLE
         }
+    }
+
+    private fun showErrorSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 }
