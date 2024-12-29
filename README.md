@@ -13,20 +13,6 @@
   <li>Unggah Gambar: Lampirkan gambar kendaraan yang hilang untuk membantu identifikasi.</li>
 </ul>
 
-<h2>Screenshot</h2>
-
-<div style="display: flex; flex-wrap: wrap;">
-  <img src="https://github.com/user-attachments/assets/d5e4311f-db4b-4533-ac53-a5682d448a58" width="250" height="500" alt="Tampilan 1" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/88f6eee1-fcde-422f-b7b1-973c19381d96" width="250" height="500" alt="Tampilan 2" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/5f3c70bb-3580-4b17-b3ac-14b3f50a60c9" width="250" height="500" alt="Tampilan 4" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/01df28c4-8e39-426d-b9d5-289ac4faf491" width="250" height="500" alt="Tampilan 6" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/6c78604c-26b0-4484-b226-3e623cf0f2dd" width="250" height="500" alt="Tampilan 8" style="margin: 5px;">
-  
-  <img src="https://github.com/user-attachments/assets/90fd4706-5f51-468d-a074-39a39e010883" width="250" height="500" alt="Tampilan 10" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/ece21c6e-8d5f-45a0-9bca-8e70e4d6f923" width="250" height="500" alt="Tampilan 11" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/358e127b-fd2a-4aec-88cd-bfe79c5ade3d" width="250" height="500" alt="Tampilan 12" style="margin: 5px;">
-</div>
-
 <h2>Teknologi yang Digunakan</h2>
 
 <ul>
