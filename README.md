@@ -18,11 +18,8 @@
 <div style="display: flex; flex-wrap: wrap;">
   <img src="https://github.com/user-attachments/assets/d5e4311f-db4b-4533-ac53-a5682d448a58" width="250" height="500" alt="Tampilan 1" style="margin: 5px;">
   <img src="https://github.com/user-attachments/assets/88f6eee1-fcde-422f-b7b1-973c19381d96" width="250" height="500" alt="Tampilan 2" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/6bc62596-bec6-4452-9432-41dd28654cb2" width="250" height="500" alt="Tampilan 3" style="margin: 5px;">
   <img src="https://github.com/user-attachments/assets/5f3c70bb-3580-4b17-b3ac-14b3f50a60c9" width="250" height="500" alt="Tampilan 4" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/87fc90fc-4bdf-4b0b-941c-e14eb5743889" width="250" height="500" alt="Tampilan 5" style="margin: 5px;">
   <img src="https://github.com/user-attachments/assets/01df28c4-8e39-426d-b9d5-289ac4faf491" width="250" height="500" alt="Tampilan 6" style="margin: 5px;">
-  <img src="https://github.com/user-attachments/assets/9391b5f1-bb86-4d39-bc58-f28a26a86ba0" width="250" height="500" alt="Tampilan 7" style="margin: 5px;">
   <img src="https://github.com/user-attachments/assets/6c78604c-26b0-4484-b226-3e623cf0f2dd" width="250" height="500" alt="Tampilan 8" style="margin: 5px;">
   <img src="https://github.com/user-attachments/assets/3d13a9e7-8aa5-4d9c-a35c-385cb9b5425f" width="250" height="500" alt="Tampilan 9" style="margin: 5px;">
   <img src="https://github.com/user-attachments/assets/90fd4706-5f51-468d-a074-39a39e010883" width="250" height="500" alt="Tampilan 10" style="margin: 5px;">
