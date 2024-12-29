@@ -13,7 +13,7 @@
   <li>Unggah Gambar: Lampirkan gambar kendaraan yang hilang untuk membantu identifikasi.</li>
 </ul>
 
-<h2>Tampilan Aplikasi/h2>
+<h2>Tampilan Aplikasi</h2>
 
 <table>
   <tr>
