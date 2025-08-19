@@ -2,8 +2,6 @@
 
 <p>AmanKu adalah aplikasi Android yang membantu pengguna melaporkan kehilangan kendaraan bermotor.</p>
 
-<p>Link Vidio Pitchdeck: <a href="https://youtu.be/XWzddbM960o">https://youtu.be/XWzddbM960o</a></p>
-
 <h2>Fitur Utama</h2>
 
 <ul>
